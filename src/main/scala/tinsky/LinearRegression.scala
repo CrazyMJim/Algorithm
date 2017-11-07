@@ -13,7 +13,6 @@ class LinearRegression {
     val appendMatrix: DenseMatrix[Double] = DenseMatrix.ones[Double](1, 1)
     val realX = DenseMatrix.vertcat(appendMatrix,x.toDenseMatrix.t)
     val y = theta.t * realX
-    println("Predict Y: "+y)
   }
 
   def train(trainData: DenseMatrix[Double]): Unit={
@@ -45,8 +44,6 @@ class LinearRegression {
         flag = false
       }
     }
-
-    println("theta:" + theta)
   }
 
   private def computeCost(x: DenseMatrix[Double],y: DenseVector[Double]): Double={
