@@ -1,24 +1,29 @@
 package test.group
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{Axis, DenseMatrix, DenseVector}
 
 import scala.collection.mutable.ArrayBuffer
 
 class Perceptron{
-  private var vectors: ArrayBuffer[(DenseVector[Double] , Int)] = null
-  private var weight: DenseVector[Double] = null
+  private var x: DenseMatrix[Double] = _
+  private var y: DenseVector[Double] = _
+  private var weight: DenseVector[Double] = _
   private var bias: Double = 0.0
-  private var step: Double = 1.0
+  private var alpha: Double = 1.0
+  private var n: Int = 0
+  private var m: Int = 0
 
-  def this(vectors: ArrayBuffer[(DenseVector[Double] , Int)]){
+  def this(trainSet: DenseMatrix[Double]){
     this()
-    this.vectors = vectors
-    weight = DenseVector.zeros[Double](vectors(0)._1.length)
+    this.m = trainSet.rows
+    this.n = trainSet.cols - 1
+    this.y = trainSet(::,n)
+    this.x = trainSet.delete(n,Axis._1)
+    weight = DenseVector.zeros[Double](n)
   }
 
-  def this(vectors: ArrayBuffer[(DenseVector[Double] , Int)],weight: DenseVector[Double]){
-    this()
-    this.vectors = vectors
+  def this(trainSet: DenseMatrix[Double],weight: DenseVector[Double]){
+    this(trainSet)
     this.weight = weight
   }
 
@@ -26,33 +31,38 @@ class Perceptron{
     var stop: Int = 0
     var flag: Int = 0
 
-    while(flag < vectors.length){
-      val dotNum: Double = vectors(stop)._2 * ( (weight dot vectors(stop)._1) + bias )
+    while(flag < m){
+      val tmpY = weight.toDenseMatrix * x(stop,::).t + bias
+      val dotNum: Double = y.valueAt(stop) * tmpY.data(0)
       var tmp:DenseVector[Double] = null
 
       if(dotNum <= 0){
-        tmp = vectors(stop)._1.copy
-        weight = weight + (tmp :*= (step * vectors(stop)._2))
-        bias = bias + vectors(stop)._2 * step
+        tmp = x(stop,::).t
+        weight = weight + (tmp * (alpha * y.valueAt(stop)))
+        bias = bias + alpha * y.valueAt(stop)
         flag = 0
       }else{
         stop += 1
         flag += 1
       }
 
-      if(stop == vectors.length && flag != vectors.length)
+      if(stop == m && flag != m)
         stop = 0
     }
 
   }
 
-  def train(vetros: ArrayBuffer[(DenseVector[Double],Int)]): Unit={
-    this.vectors = vetros
+  def train(trainSet: DenseMatrix[Double]): Unit={
+    this.m = trainSet.rows
+    this.n = trainSet.cols - 1
+    this.y = trainSet(::,n + 1)
+    this.x = trainSet.delete(n,Axis._1)
     train()
   }
 
   def fit(x: DenseVector[Double]): Int={
-    if( ( (weight dot x) + bias ) > 0)
+    val predictY = weight.toDenseMatrix * x.toDenseMatrix.t + bias
+    if( predictY.data(0) > 0)
       1
     else
       -1
@@ -68,18 +78,18 @@ class Perceptron{
   //设置初始乖离值
   def setBias(b: Double) = this.bias = b
 
-  def getStep(): Double = this.step
+  def getAlpha(): Double = this.alpha
 
-  def setStep(step: Double) = this.step = step
+  def setAlpha(alpha: Double) = this.alpha = alpha
 
 }
 
 object Perceptron{
   def main(args: Array[String]): Unit = {
-    val features: ArrayBuffer[(DenseVector[Double] , Int)] = ArrayBuffer(
-      ( DenseVector(3.0,3.0,3.0) ,1),
-      ( DenseVector(4.0,3.0,2.0) ,1),
-      ( DenseVector(1.0,1.0,1.0) ,-1)
+    val features: DenseMatrix[Double] = DenseMatrix(
+      (3.0,3.0,3.0,1.0),
+      (4.0,3.0,2.0,1.0),
+      (1.0,1.0,1.0,-1.0)
     )
 
     val test: DenseVector[Double] = DenseVector(4.0,4.0,4.0)
