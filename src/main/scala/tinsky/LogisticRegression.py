@@ -17,7 +17,7 @@ class LogisticRegression:
         self.__cost_history = 0
 
     #训练数据前需要将数据无量纲化
-    #本例使用吴恩达老师在cousera中使用的数据并进行标准化后得到损失值为0.25934
+    #本例使用吴恩达老师在cousera中使用的数据并进行标准化后得到损失值为0.205934
     def train(self, data_set):
         if isinstance(data_set, ndarray):
             m, n = data_set.shape
